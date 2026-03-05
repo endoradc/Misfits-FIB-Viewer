@@ -1,23 +1,26 @@
-export default async function handler(req, res) {
+module.exports = async (req, res) => {
   const target = req.query.url;
   if (!target) {
-    res.status(400).send("Missing url");
+    res.statusCode = 400;
+    res.end("Missing url");
     return;
   }
 
   try {
     const upstream = await fetch(target, { redirect: "follow" });
 
-    res.status(upstream.status);
+    res.statusCode = upstream.status;
     res.setHeader("Access-Control-Allow-Origin", "*");
     res.setHeader("Cache-Control", "no-store");
 
     const contentType = upstream.headers.get("content-type") || "application/octet-stream";
     res.setHeader("Content-Type", contentType);
 
-    const buf = Buffer.from(await upstream.arrayBuffer());
-    res.send(buf);
+    const arrayBuffer = await upstream.arrayBuffer();
+    const buf = Buffer.from(arrayBuffer);
+    res.end(buf);
   } catch (err) {
-    res.status(500).send(String(err?.message || err));
+    res.statusCode = 500;
+    res.end(String(err?.message || err));
   }
-}
+};
